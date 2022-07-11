@@ -10,7 +10,7 @@ public class Product {
     @Id
     private String id;
 
-    private String indProduct;
+    private int indProduct;
     private String descIndProduct;
     private int typeProduct;
     private String descTypeProduct;
