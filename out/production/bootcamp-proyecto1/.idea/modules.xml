@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/bootcamp-proyecto1.iml" filepath="$PROJECT_DIR$/.idea/bootcamp-proyecto1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/config-service/configserver.iml" filepath="$PROJECT_DIR$/config-service/configserver.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ms-customer/customer.iml" filepath="$PROJECT_DIR$/ms-customer/customer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ms-product/product.iml" filepath="$PROJECT_DIR$/ms-product/product.iml" />
+    </modules>
+  </component>
+</project>
