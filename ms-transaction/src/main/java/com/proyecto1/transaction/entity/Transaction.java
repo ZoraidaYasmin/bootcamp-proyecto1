@@ -27,7 +27,7 @@ public class Transaction {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    private LocalDate RetirementDateFixedTerm;
+    private LocalDate retirementDateFixedTerm;
 
     @Transient
     private Customer customer;
