@@ -1,22 +1,28 @@
 package com.proyecto1.signatory.service.impl;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.proyecto1.signatory.entity.Signatory;
 import com.proyecto1.signatory.repository.SignatoryRepository;
 import com.proyecto1.signatory.service.SignatoryService;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 public class SignatoryServiceImpl implements SignatoryService {
+	
+	private static final Logger log = LogManager.getLogger(SignatoryServiceImpl.class);
 
     @Autowired
     SignatoryRepository signatoryRepository;
 
     @Override
     public Flux<Signatory> findAll() {
+    	log.info("SignatoryServiceImpl metodo findAll");
         return signatoryRepository.findAll();
     }
 
