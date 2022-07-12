@@ -6,6 +6,7 @@
       <module fileurl="file://$PROJECT_DIR$/config-service/configserver.iml" filepath="$PROJECT_DIR$/config-service/configserver.iml" />
       <module fileurl="file://$PROJECT_DIR$/ms-customer/customer.iml" filepath="$PROJECT_DIR$/ms-customer/customer.iml" />
       <module fileurl="file://$PROJECT_DIR$/ms-product/product.iml" filepath="$PROJECT_DIR$/ms-product/product.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ms-transaction/transaction.iml" filepath="$PROJECT_DIR$/ms-transaction/transaction.iml" />
     </modules>
   </component>
 </project>
