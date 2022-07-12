@@ -1,11 +1,16 @@
 package com.proyecto1.transaction.service.impl;
 
+import java.math.BigDecimal;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.proyecto1.transaction.client.CustomerClient;
 import com.proyecto1.transaction.entity.Transaction;
 import com.proyecto1.transaction.repository.TransactionRepository;
 import com.proyecto1.transaction.service.TransactionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import com.proyecto1.transaction.signatory.ProductWebClient;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -17,6 +22,9 @@ public class TransacionServiceImpl implements TransactionService {
 
     @Autowired
     CustomerClient customerClient;
+    
+    @Autowired
+    ProductWebClient product;
 
     @Override
     public Flux<Transaction> findAll() {
@@ -25,7 +33,17 @@ public class TransacionServiceImpl implements TransactionService {
 
     @Override
     public Mono<Transaction> save(Transaction t) {
-        return transactionRepository.save(t);
+    	
+    	return limitsAndCommissionValidation(t).flatMap(b -> {
+    		return Mono.just(t).flatMap(trans -> {
+    			if(b==true) {
+    				return transactionRepository.save(t);
+    			}else {
+    				return Mono.just(new Transaction());
+    			}
+    			
+    		});
+    	});
     }
 
     @Override
@@ -59,5 +77,35 @@ public class TransacionServiceImpl implements TransactionService {
             x.setCustomer(customerClient.getCustomer(x.getCustomerId()).block());
             return x;
         });
+    }
+    
+    public Mono<Boolean> limitsAndCommissionValidation(Transaction t) {
+    	// Ahorro 10 movimientos maximo mensuales
+    	// Cuenta corriente sin limite movimientos
+    	
+    	return product.getProduct(t.getProductId()).flatMap(product -> {
+    			// Ahorro 1
+    			if(product.getTypeProduct() == 1) {
+    				if(t.getMovementLimit() <= 10 && t.getMaintenanceCommission() == new BigDecimal(0)) {
+    					return Mono.just(true);
+    				} else {
+    					return Mono.just(false);
+    				}
+    			}
+    			// Cuenta Corriente 2
+    			if(product.getTypeProduct() == 2) {
+    				return Mono.just(true);
+    			}
+    			// Plazo Fijo 3
+    			if(product.getTypeProduct() == 3) {
+    				if(t.getMovementLimit() <= 1 && t.getMaintenanceCommission() == new BigDecimal(0)) {
+    					return Mono.just(true);
+    				} else {
+    					return Mono.just(false);
+    				}
+    			}
+    			
+    			return Mono.just(false);
+    		});
     }
 }
