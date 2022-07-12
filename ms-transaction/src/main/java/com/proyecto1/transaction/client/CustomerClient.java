@@ -8,14 +8,14 @@ import reactor.core.publisher.Mono;
 @Component
 public class CustomerClient {
 
-    private WebClient client = WebClient.create("http://localhost:9002/customers");
+    private WebClient client = WebClient.create("http://localhost:9002/customer");
 
     public Mono<Customer> getCustomer(String id){
         return client.get()
-                //.uri("/find/"+id)
-                .uri(uriBuilder -> uriBuilder
+                .uri("/find/"+id)
+                /*.uri(uriBuilder -> uriBuilder
                         .path("/find/{id}")
-                        .build(id))
+                        .build(id))*/
 
                 .retrieve()
                 .bodyToMono(Customer.class);
