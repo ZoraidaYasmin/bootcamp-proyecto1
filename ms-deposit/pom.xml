@@ -11,8 +11,8 @@
 	<groupId>com.proyecto1</groupId>
 	<artifactId>deposit</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>customer</name>
-	<description>proyect ms product</description>
+	<name>deposit</name>
+	<description>proyect ms deposit</description>
 	<properties>
 		<java.version>11</java.version>
 		<spring-cloud.version>2021.0.3</spring-cloud.version>

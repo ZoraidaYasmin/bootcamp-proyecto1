@@ -11,7 +11,7 @@
 	<groupId>com.proyecto1</groupId>
 	<artifactId>payment</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>customer</name>
+	<name>payment</name>
 	<description>proyect ms product</description>
 	<properties>
 		<java.version>11</java.version>

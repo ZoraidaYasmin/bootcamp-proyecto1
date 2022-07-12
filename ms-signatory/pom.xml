@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.proyecto1</groupId>
-	<artifactId>deposit</artifactId>
+	<artifactId>signatory</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>signatory</name>
 	<description>proyect ms product</description>
