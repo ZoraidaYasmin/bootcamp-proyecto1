@@ -22,22 +22,25 @@ public class SignatoryServiceImpl implements SignatoryService {
 
     @Override
     public Flux<Signatory> findAll() {
-    	log.info("SignatoryServiceImpl metodo findAll");
+        log.info("Method call FindAll - signatory");
         return signatoryRepository.findAll();
     }
 
     @Override
     public Mono<Signatory> create(Signatory c) {
+        log.info("Method call Create - signatory");
         return signatoryRepository.save(c);
     }
 
     @Override
     public Mono<Signatory> findById(String id) {
+        log.info("Method call findById - signatory");
         return signatoryRepository.findById(id);
     }
 
     @Override
     public Mono<Signatory> update(Signatory c, String id) {
+        log.info("Method call Update - signatory");
         return signatoryRepository.findById(id)
                 .map( x -> {
                     x.setName(c.getName());
@@ -49,6 +52,7 @@ public class SignatoryServiceImpl implements SignatoryService {
 
     @Override
     public Mono<Signatory> delete(String id) {
+        log.info("Method call Delete - signatory");
         return signatoryRepository.findById(id).flatMap( x -> signatoryRepository.delete(x).then(Mono.just(new Signatory())));
     }
 }
