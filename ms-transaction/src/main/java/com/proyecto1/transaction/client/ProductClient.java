@@ -1,4 +1,4 @@
-package com.proyecto1.transaction.signatory;
+package com.proyecto1.transaction.client;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -8,7 +8,7 @@ import com.proyecto1.transaction.entity.Product;
 import reactor.core.publisher.Mono;
 
 @Component
-public class ProductWebClient {
+public class ProductClient {
 	
 	private WebClient product = WebClient.create("http://localhost:9003/product");
 

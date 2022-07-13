@@ -17,4 +17,6 @@ public interface TransactionService {
     Mono<Transaction> delete(String id);
 
     Mono<Transaction> findByIdWithCustomer(String id);
+    
+    Flux<Transaction> findAllWithDetail();
 }

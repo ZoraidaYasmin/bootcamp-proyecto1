@@ -22,6 +22,12 @@ public class TransactionController {
         log.info("Service call FindAll - transaction");
         return transactionService.findAll();
     }
+    
+    @GetMapping("/findAllWithDetail")
+    public Flux<Transaction> getTransactions(){
+        log.info("Service call findAllWithDetail - transaction");
+        return transactionService.findAllWithDetail();
+    }
 
     @GetMapping("/find/{id}")
     public Mono<Transaction> getTransaction(@PathVariable String id){

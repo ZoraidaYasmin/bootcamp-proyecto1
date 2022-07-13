@@ -2,6 +2,8 @@ package com.proyecto1.transaction.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import reactor.core.publisher.Mono;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -31,4 +33,7 @@ public class Transaction {
 
     @Transient
     private Customer customer;
+    
+    @Transient
+    private Product product;
 }
