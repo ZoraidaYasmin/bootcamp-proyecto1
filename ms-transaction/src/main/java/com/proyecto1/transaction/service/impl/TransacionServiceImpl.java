@@ -42,39 +42,51 @@ public class TransacionServiceImpl implements TransactionService {
         log.info("Method call Create - transaction");
         //productsPerCustomerValidation(t).subscribe(e -> log.info(e));
         
-        long accountPersonalCustomer = this.findAllWithDetail()
-                .filter( x -> x.getCustomerId().equals(t.getCustomerId()))
-                .filter( x -> (x.getProduct().getIndProduct() == 2 && x.getCustomer().getTypeCustomer() == 1) )
-                .count().share().block();
-        
-        if (accountPersonalCustomer > 0) {
-            throw new RuntimeException("El cliente personal no puede tener mas de una cuenta bancaria");
-        }
-        
-        long creditPersonalCustomer = this.findAllWithDetail()
-                .filter( x -> x.getCustomerId().equals(t.getCustomerId()))
-                .filter( x -> (x.getProduct().getIndProduct() == 1 && x.getCustomer().getTypeCustomer() == 1) )
-                .count().share().block();
-        
-        if (creditPersonalCustomer > 0) {
-            throw new RuntimeException("El cliente personal no puede tener mas de un credito");
-        }
-        
-        // Datos del producto a crear
-        Product productoToCreate = product.getProduct(t.getProductId())
-                .filter( y -> (y.getIndProduct() == 2) ) // Validamos si el producto es PASIVO
-                .filter( y -> (y.getTypeProduct() == 1 || y.getTypeProduct() == 3) ) // Validar si es cuenta de ahorros o plazo fijo
-                .share().block();
-        
-        // Datos del cliente solicitante el producto
-        Customer customerToTransaction = customerClient.getCustomer(t.getCustomerId())
-                .filter( (z -> z.getTypeCustomer() == 2) ) // Validar si el customerId es empresarial
-                .share().block();
-        
-        if (productoToCreate != null && customerToTransaction != null) {
-            throw new RuntimeException("El cliente empresarial no puede tener una cuenta de ahorros o plazo fijo");
-        }
-        
+        return this.findAllWithDetail()
+                .filter( x -> x.getCustomerId().equals(t.getCustomerId())) // Buscamos el customerId de la lista
+                .filter( x -> (x.getProduct().getIndProduct() == 2 && x.getCustomer().getTypeCustomer() == 1) && (x.getProduct().getId().equals(t.getProductId())) ) // Buscamos si tiene una cuenta bancaria y es cliente personal
+                .hasElements()
+                .flatMap( v -> {
+                    if (v){
+                        return Mono.error(new RuntimeException("El cliente personal no puede tener mas de una cuenta bancaria"));
+                    }else{
+                        return this.findAllWithDetail()
+                                .filter( x -> x.getCustomerId().equals(t.getCustomerId())) // Buscamos el customerId de la lista
+                                .filter( x -> (x.getProduct().getIndProduct() == 1 && x.getCustomer().getTypeCustomer() == 1) && (x.getProduct().getId().equals(t.getProductId())) ) // Buscamos si tiene un credito y es cliente personal
+                                .hasElements()
+                                .flatMap( w -> {
+                                   if (w){
+                                       return Mono.error(new RuntimeException("El cliente personal no puede tener mas de un credito"));
+                                   }else{
+                                       return product.getProduct(t.getProductId())
+                                               .filter( x -> (x.getIndProduct() == 2) ) // Validar si el producto es PASIVO
+                                               .filter( x -> (x.getTypeProduct() == 1 || x.getTypeProduct() == 3) ) // Validar si es cuenta de ahorros o plazo fijo
+                                               .hasElement()
+                                               .flatMap( zz -> {
+                                                   return customerClient.getCustomer(t.getCustomerId())
+                                                           .filter( (x -> x.getTypeCustomer() == 2) ) // Validar si el customerId es empresarial
+                                                           .hasElement()
+                                                           .flatMap( yy -> {
+                                                               if ( zz  && yy ){
+                                                                   return Mono.error(new RuntimeException("El cliente empresarial no puede tener una cuenta de ahorros o plazo fijo"));
+                                                               }else{
+                                                            	   return Mono.just(t).filterWhen(trans -> limitsAndCommissionValidation(trans))
+                                                                   		.flatMap(tFiltered -> {
+                                                                   			if(tFiltered != null) {
+                                                                   				return transactionRepository.save(t);
+                                                                   			} else {
+                                                                   				log.warn("No se registro la cuenta");
+                                                                   				throw new RuntimeException("validacion limite movimientos mensuales y comision");
+                                                                   			}
+                                                                   	});
+                                                               }
+                                                           });
+                                               });
+                                   }
+                                });
+                    }
+                });
+        /*
         return Mono.just(t).filterWhen(trans -> limitsAndCommissionValidation(trans))
         		.flatMap(tFiltered -> {
         			if(tFiltered != null) {
@@ -84,7 +96,7 @@ public class TransacionServiceImpl implements TransactionService {
         				throw new RuntimeException("validacion limite movimientos mensuales y comision");
         			}
         			
-        		});
+        		});*/
         /*
         return Mono.just(t).filterWhen(trans -> limitsAndCommissionValidation(trans))
         		//.filterWhen(trans2 -> productsPerCustomerValidation(trans2))
@@ -168,11 +180,18 @@ public class TransacionServiceImpl implements TransactionService {
     @Override
     public Mono<Transaction> findByIdWithCustomer(String id) {
         log.info("Method call FindByIdWithCustomer - transaction");
-        return transactionRepository.findById(id).map( x -> {
-            x.setCustomer(customerClient.getCustomer(x.getCustomerId()).block());
-            x.setProduct(product.getProduct(x.getProductId()).block());
-            return x;
-        });
+        return transactionRepository.findById(id)
+                .flatMap( trans -> {
+                    return customerClient.getCustomer(trans.getCustomerId())
+                            .flatMap( customer -> {
+                                return product.getProduct(trans.getProductId())
+                                        .flatMap( product -> {
+                                        	trans.setCustomer(customer);
+                                        	trans.setProduct(product);
+                                            return Mono.just(trans);
+                                        });
+                            });
+                });
     }
     
     public Mono<Boolean> limitsAndCommissionValidation(Transaction t) {
