@@ -1,5 +1,6 @@
 package com.proyecto1.payment.service.impl;
 
+import com.proyecto1.payment.client.TransactionClient;
 import com.proyecto1.payment.entity.Payment;
 import com.proyecto1.payment.repository.PaymentRepository;
 import com.proyecto1.payment.service.PaymentService;
@@ -18,6 +19,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     PaymentRepository paymentRepository;
 
+    @Autowired
+    TransactionClient transactionClient;
+
     @Override
     public Flux<Payment> findAll() {
         log.info("Method call FindAll - payment");
@@ -27,7 +31,17 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Mono<Payment> create(Payment c) {
         log.info("Method call create - payment");
-        return paymentRepository.save(c);
+        return transactionClient.getTransactionWithDetails(c.getTransactionId())
+                .filter( x -> x.getProduct().getIndProduct() == 1)
+                .hasElement()
+                .flatMap( y -> {
+                    if(y){
+                        return paymentRepository.save(c);
+                    }else{
+                        return Mono.error(new RuntimeException("El pago que desea realizar no es de un producto de credito"));
+                    }
+                });
+
     }
 
     @Override
