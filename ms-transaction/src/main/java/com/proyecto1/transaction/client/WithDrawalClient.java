@@ -8,7 +8,7 @@ import reactor.core.publisher.Flux;
 
 @Component
 public class WithDrawalClient {
-    private WebClient client = WebClient.create("http://localhost:9009/deposit");
+    private WebClient client = WebClient.create("http://localhost:9009/withdrawal");
 
     public Flux<Withdrawal> getWithDrawal(){
         return client.get()
