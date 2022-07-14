@@ -22,4 +22,5 @@ public class Purchase {
     private LocalDate date;
     private BigDecimal purchaseAmount;
     private String description;
+    private String transactionId;
 }

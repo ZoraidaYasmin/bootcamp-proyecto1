@@ -1,8 +1,11 @@
 package com.proyecto1.purchase.service.impl;
 
+import com.proyecto1.purchase.client.TransactionClient;
 import com.proyecto1.purchase.entity.Purchase;
 import com.proyecto1.purchase.repository.PurchaseRepository;
 import com.proyecto1.purchase.service.PurchaseService;
+
+import java.math.BigDecimal;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +20,9 @@ public class PurchaseServiceImpl implements PurchaseService {
     private static final Logger log = LogManager.getLogger(PurchaseServiceImpl.class);
     @Autowired
     PurchaseRepository purchaseRepository;
+    
+    @Autowired
+    TransactionClient transactionClient;
 
     @Override
     public Flux<Purchase> findAll() {
@@ -25,9 +31,23 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
-    public Mono<Purchase> create(Purchase c) {
+    public Mono<Purchase> create(Purchase purchase) {
         log.info("Method call create - purchase");
-        return purchaseRepository.save(c);
+        return Mono.just(purchase).flatMap(p -> {
+        	return transactionClient.getTransactionWithDetails(p.getTransactionId())
+                    .filter(trans -> trans.getProduct().getTypeProduct() == 6) // Valida si es una tarjeta de credito
+                    .flatMap(t -> {
+                    	return this.findAllByTransactionId(purchase.getTransactionId()).map(s -> s.getPurchaseAmount())
+                    	.reduce(new BigDecimal(0), (x1, x2) -> x1.add(x2))
+                    	.flatMap(totalPurchase -> {
+                    		if(t.getCreditLimit().compareTo(totalPurchase.add(purchase.getPurchaseAmount())) > -1) {// Valida que el monto disponible sea mayor o igual al monto por comprar
+                    			return purchaseRepository.save(purchase);
+                    		}else{
+                                return Mono.error(new RuntimeException("No se pudo realizar la compra, verifique su saldo disponible o si el producto es una tarjeta de credito."));
+                            }
+                    	});
+                    });
+        });
     }
 
     @Override
@@ -53,4 +73,10 @@ public class PurchaseServiceImpl implements PurchaseService {
         log.info("Method call delete - purchase");
         return purchaseRepository.findById(id).flatMap( x -> purchaseRepository.delete(x).then(Mono.just(new Purchase())));
     }
+
+	@Override
+	public Flux<Purchase> findAllByTransactionId(String id) {
+		log.info("Method call FindAllByTransactionId - purchase");
+        return purchaseRepository.findAll().filter(purch -> purch.getTransactionId().equalsIgnoreCase(id));
+	}
 }

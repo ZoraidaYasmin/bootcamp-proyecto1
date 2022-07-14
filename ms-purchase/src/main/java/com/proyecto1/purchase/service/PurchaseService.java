@@ -12,6 +12,8 @@ public interface PurchaseService {
     Mono<Purchase> create(Purchase c);
 
     Mono<Purchase> findById(String id);
+    
+    Flux<Purchase> findAllByTransactionId(String id);
 
     Mono<Purchase> update(Purchase c, String id);
 
