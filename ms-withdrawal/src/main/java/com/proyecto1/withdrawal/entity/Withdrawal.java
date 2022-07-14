@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Data;
 
-@Document(collection = "schema_people.withdrawals")
+@Document(collection = "schema_with.withdrawals")
 @Data
 public class Withdrawal {
 
@@ -17,4 +17,5 @@ public class Withdrawal {
     private Date date;
     private BigDecimal withdrawalAmount;
     private String description;
+    private String transactionId;
 }

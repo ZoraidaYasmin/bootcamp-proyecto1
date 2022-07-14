@@ -1,20 +1,15 @@
-package com.proyecto1.transaction.entity;
+package com.proyecto1.withdrawal.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
-import reactor.core.publisher.Mono;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Document(collection = "schema_account.transaction")
-@JsonInclude(JsonInclude.Include.NON_NULL)
+
 @Data
 public class Transaction {
     @Id

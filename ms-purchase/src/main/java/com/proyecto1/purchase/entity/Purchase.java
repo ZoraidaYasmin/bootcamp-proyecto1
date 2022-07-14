@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import lombok.Data;
 
-@Document(collection = "schema_people.puchases")
+@Document(collection = "schema_purchase.puchases")
 @Data
 public class Purchase {
 

@@ -1,5 +1,6 @@
 package com.proyecto1.withdrawal.service.impl;
 
+import com.proyecto1.withdrawal.client.TransactionClient;
 import com.proyecto1.withdrawal.entity.Withdrawal;
 import com.proyecto1.withdrawal.repository.WithdrawalRepository;
 import com.proyecto1.withdrawal.service.WithdrawalService;
@@ -19,6 +20,8 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     @Autowired
     WithdrawalRepository withdrawalRepository;
 
+    @Autowired
+    TransactionClient transactionClient;
     @Override
     public Flux<Withdrawal> findAll() {
         log.info("Method call FindAll - withdrawal");
@@ -28,7 +31,17 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     @Override
     public Mono<Withdrawal> create(Withdrawal c) {
         log.info("Method call Create - withdrawal");
-        return withdrawalRepository.save(c);
+        return transactionClient.getTransactionWithDetails(c.getTransactionId())
+                .filter( x -> x.getProduct().getIndProduct() == 2)
+                .hasElement()
+                .flatMap( y -> {
+                    if(y){
+                        return withdrawalRepository.save(c);
+                    }else{
+                        return Mono.error(new RuntimeException("La cuenta ingresada no es una cuenta bancaria"));
+                    }
+                });
+
     }
 
     @Override
