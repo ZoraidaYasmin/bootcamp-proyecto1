@@ -43,7 +43,7 @@ public class PurchaseServiceImpl implements PurchaseService {
                     		if(t.getCreditLimit().compareTo(totalPurchase.add(purchase.getPurchaseAmount())) > -1) {// Valida que el monto disponible sea mayor o igual al monto por comprar
                     			return purchaseRepository.save(purchase);
                     		}else{
-                                return Mono.error(new RuntimeException("No se pudo realizar la compra, verifique su saldo disponible o si el producto es una tarjeta de credito."));
+                                return Mono.error(new RuntimeException("The purchase could not be made, check your available balance or if the product is a credit card"));
                             }
                     	});
                     });

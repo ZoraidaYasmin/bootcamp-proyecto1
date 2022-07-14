@@ -39,7 +39,7 @@ public class DepositServiceImpl implements DepositService {
                     if(y){
                         return depositRepository.save(c);
                     }else{
-                        return Mono.error(new RuntimeException("La cuenta ingresada no es una cuenta bancaria"));
+                        return Mono.error(new RuntimeException("The account entered is not a bank account"));
                     }
                 });
     }

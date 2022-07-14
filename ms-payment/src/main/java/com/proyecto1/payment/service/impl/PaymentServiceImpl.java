@@ -38,7 +38,7 @@ public class PaymentServiceImpl implements PaymentService {
                     if(y){
                         return paymentRepository.save(c);
                     }else{
-                        return Mono.error(new RuntimeException("El pago que desea realizar no es de un producto de credito"));
+                        return Mono.error(new RuntimeException("The payment you want to make is not a credit product"));
                     }
                 });
 

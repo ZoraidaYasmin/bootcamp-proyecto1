@@ -42,7 +42,7 @@ public class SignatoryServiceImpl implements SignatoryService {
                     if(y){
                         return signatoryRepository.save(c);
                     }else{
-                        return Mono.error(new RuntimeException("La cuenta ingresada no es una cuenta bancaria empresarial"));
+                        return Mono.error(new RuntimeException("The account entered is not a business bank account"));
                     }
                 });
     }
