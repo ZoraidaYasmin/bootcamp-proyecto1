@@ -35,7 +35,7 @@ public class TransactionController {
         Mono<Transaction> newTransaction = transactionService.findById(id);
         return newTransaction;
     }
-    @GetMapping("/findWithCustomer/{id}")
+    @GetMapping("/findByIdWithCustomer/{id}")
     public Mono<Transaction> getTransactionWithCustomer(@PathVariable String id){
         log.info("Service call findWithCustomer - transaction");
         Mono<Transaction> newTransaction = transactionService.findByIdWithCustomer(id);

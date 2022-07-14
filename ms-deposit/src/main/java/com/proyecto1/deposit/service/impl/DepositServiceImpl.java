@@ -1,5 +1,6 @@
 package com.proyecto1.deposit.service.impl;
 
+import com.proyecto1.deposit.client.TransactionClient;
 import com.proyecto1.deposit.entity.Deposit;
 import com.proyecto1.deposit.repository.DepositRepository;
 import com.proyecto1.deposit.service.DepositService;
@@ -18,6 +19,9 @@ public class DepositServiceImpl implements DepositService {
     @Autowired
     DepositRepository depositRepository;
 
+    @Autowired
+    TransactionClient transactionClient;
+
     @Override
     public Flux<Deposit> findAll() {
         log.info("Method call FindAll - deposit");
@@ -27,7 +31,17 @@ public class DepositServiceImpl implements DepositService {
     @Override
     public Mono<Deposit> create(Deposit c) {
         log.info("Method call create - deposit");
-        return depositRepository.save(c);
+
+        return transactionClient.getTransactionWithDetails(c.getTransactionId())
+                .filter( x -> x.getProduct().getIndProduct() == 1)
+                .hasElement()
+                .flatMap( y -> {
+                    if(y){
+                        return depositRepository.save(c);
+                    }else{
+                        return Mono.error(new RuntimeException("La cuenta ingresada no es una cuenta bancaria"));
+                    }
+                });
     }
 
     @Override
