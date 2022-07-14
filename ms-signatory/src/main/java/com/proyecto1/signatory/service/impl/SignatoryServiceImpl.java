@@ -1,5 +1,6 @@
 package com.proyecto1.signatory.service.impl;
 
+import com.proyecto1.signatory.client.TransactionClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ public class SignatoryServiceImpl implements SignatoryService {
     @Autowired
     SignatoryRepository signatoryRepository;
 
+    @Autowired
+    TransactionClient transactionClient;
+
     @Override
     public Flux<Signatory> findAll() {
         log.info("Method call FindAll - signatory");
@@ -29,7 +33,18 @@ public class SignatoryServiceImpl implements SignatoryService {
     @Override
     public Mono<Signatory> create(Signatory c) {
         log.info("Method call Create - signatory");
-        return signatoryRepository.save(c);
+
+        return transactionClient.getAccountWithDetails(c.getTransactionId())
+                .filter( x -> x.getProduct().getIndProduct() == 1)
+                .filter(z -> z.getCustomer().getTypeCustomer() == 2)
+                .hasElement()
+                .flatMap( y -> {
+                    if(y){
+                        return signatoryRepository.save(c);
+                    }else{
+                        return Mono.error(new RuntimeException("La cuenta ingresada no es una cuenta bancaria empresarial"));
+                    }
+                });
     }
 
     @Override

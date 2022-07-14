@@ -13,4 +13,5 @@ public class Signatory {
     private String name;
     private String lastName;
     private String docNumber;
+    private String transactionId;
 }

@@ -33,7 +33,7 @@ public class DepositServiceImpl implements DepositService {
         log.info("Method call create - deposit");
 
         return transactionClient.getTransactionWithDetails(c.getTransactionId())
-                .filter( x -> x.getProduct().getIndProduct() == 2)
+                .filter( x -> x.getProduct().getIndProduct() == 1)
                 .hasElement()
                 .flatMap( y -> {
                     if(y){
