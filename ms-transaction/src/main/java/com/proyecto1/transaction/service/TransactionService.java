@@ -19,4 +19,6 @@ public interface TransactionService {
     Mono<Transaction> findByIdWithCustomer(String id);
     
     Flux<Transaction> findAllWithDetail();
+
+    //Flux<Transaction> findAllData(String id);
 }

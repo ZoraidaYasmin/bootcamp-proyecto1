@@ -8,15 +8,17 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 
 @Data
 public class Transaction {
-    @Id
+
     private String id;
 
     private String customerId;
     private String productId;
+    private String depositId;
     private String accountNumber;
     private int movementLimit;
     private BigDecimal creditLimit;
@@ -28,9 +30,17 @@ public class Transaction {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate retirementDateFixedTerm;
 
-    @Transient
+
     private Customer customer;
-    
-    @Transient
+
+
     private Product product;
+
+
+    private List<Deposit> deposit;
+
+
+    private List<Withdrawal> withdrawal;
+
+    private List<Payment> payments;
 }

@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 @Data
 public class Transaction {
-    @Id
+
     private String id;
 
     private String customerId;

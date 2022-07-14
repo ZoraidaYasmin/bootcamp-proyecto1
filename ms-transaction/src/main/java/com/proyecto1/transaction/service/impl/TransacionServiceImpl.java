@@ -1,17 +1,18 @@
 package com.proyecto1.transaction.service.impl;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
+import com.proyecto1.transaction.client.*;
+import com.proyecto1.transaction.entity.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.proyecto1.transaction.client.CustomerClient;
-import com.proyecto1.transaction.client.ProductClient;
-import com.proyecto1.transaction.entity.Customer;
-import com.proyecto1.transaction.entity.Product;
-import com.proyecto1.transaction.entity.Transaction;
 import com.proyecto1.transaction.repository.TransactionRepository;
 import com.proyecto1.transaction.service.TransactionService;
 
@@ -30,6 +31,21 @@ public class TransacionServiceImpl implements TransactionService {
     
     @Autowired
     ProductClient product;
+
+    @Autowired
+    DepositClient depositClient;
+
+    @Autowired
+    WithDrawalClient withDrawalClient;
+
+    @Autowired
+    PaymentClient paymentClient;
+
+    @Autowired
+    PurchaseClient purchaseClient;
+
+    @Autowired
+    SignatoryClient signatoryClient;
 
     @Override
     public Flux<Transaction> findAll() {
@@ -70,15 +86,8 @@ public class TransacionServiceImpl implements TransactionService {
                                                                if ( zz  && yy ){
                                                                    return Mono.error(new RuntimeException("El cliente empresarial no puede tener una cuenta de ahorros o plazo fijo"));
                                                                }else{
-                                                            	   return Mono.just(t).filterWhen(trans -> limitsAndCommissionValidation(trans))
-                                                                   		.flatMap(tFiltered -> {
-                                                                   			if(tFiltered != null) {
                                                                    				return transactionRepository.save(t);
-                                                                   			} else {
-                                                                   				log.warn("No se registro la cuenta");
-                                                                   				throw new RuntimeException("validacion limite movimientos mensuales y comision");
-                                                                   			}
-                                                                   	});
+
                                                                }
                                                            });
                                                });
@@ -86,67 +95,6 @@ public class TransacionServiceImpl implements TransactionService {
                                 });
                     }
                 });
-        /*
-        return Mono.just(t).filterWhen(trans -> limitsAndCommissionValidation(trans))
-        		.flatMap(tFiltered -> {
-        			if(tFiltered != null) {
-        				return transactionRepository.save(t);
-        			} else {
-        				log.warn("No se registro la cuenta");
-        				throw new RuntimeException("validacion limite movimientos mensuales y comision");
-        			}
-        			
-        		});*/
-        /*
-        return Mono.just(t).filterWhen(trans -> limitsAndCommissionValidation(trans))
-        		//.filterWhen(trans2 -> productsPerCustomerValidation(trans2))
-        		.flatMap(tFiltered -> {
-        			if(tFiltered != null) {
-        				return transactionRepository.save(t);
-        			} else {
-        				log.warn("No se registro la cuenta");
-        				return Mono.just(new Transaction());
-        			}
-        			
-        		});
-        /*
-        Flux<Properties> properties = Mono.just(productId)
-        		.filterWhen(prodId -> productService.isProductNotExcluded(prodId))
-        		.map(validProductId -> propertiesService.getProductDetailProperties(validProductId));
-        
-        /*
-        return productsPerCustomerValidation(t).flatMap(b1 -> {
-        		limitsAndCommissionValidation(t).flatMap(b2 -> {
-        			if(b1 && b2) {
-        				return transactionRepository.save(t);
-        			}else {
-        				log.warn("No se registro la cuenta");
-        				return Mono.just(new Transaction());
-        			}
-        		});
-        		log.warn("No se registro la cuenta");
-				return Mono.just(new Transaction()); 
-        	});
-        
-        /*
-    	return limitsAndCommissionValidation(t).flatMap(b -> {
-    		return Mono.just(t).flatMap(trans -> {
-    			if(b==true) {
-    				return productsPerCustomerValidation(t).flatMap(ppcv -> {
-    					if (ppcv == true) {
-    						return transactionRepository.save(t);
-        				} else {
-        					log.warn("No se registro la cuenta");
-            				return Mono.just(new Transaction());
-        				}
-    				});
-    			}else {
-    				log.warn("No se registro la cuenta");
-    				return Mono.just(new Transaction());
-    			}
-    			
-    		});
-    	});*/
     }
 
     @Override
@@ -186,12 +134,38 @@ public class TransacionServiceImpl implements TransactionService {
                             .flatMap( customer -> {
                                 return product.getProduct(trans.getProductId())
                                         .flatMap( product -> {
-                                        	trans.setCustomer(customer);
-                                        	trans.setProduct(product);
-                                            return Mono.just(trans);
-                                        });
+                                        	return depositClient.getDeposit()
+                                                    .filter(x -> x.getTransactionId().equals(trans.getId()))
+                                                    .collectList()
+                                                    .flatMap((deposit -> {
+                                                        return withDrawalClient.getWithDrawal()
+                                                               .filter(i -> i.getTransactionId().equals(trans.getId()))
+                                                               .collectList()
+                                                               .flatMap(( withdrawals -> {
+                                                                   return paymentClient.getPayment()
+                                                                           .filter(z -> z.getTransactionId().equals(trans.getId()))
+                                                                           .collectList()
+                                                                           .flatMap((payments -> {
+                                                                   return purchaseClient.getPurchase()
+                                                                           .filter(y -> y.getTransactionId().equals(trans.getId()))
+                                                                           .collectList()
+                                                                           .flatMap(purchases -> {
+
+                                                                               return signatoryClient.getSignatory()
+                                                                                       .filter(o -> o.getTransactionId().equals(trans.getId()))
+                                                                                       .collectList()
+                                                                                       .flatMap(signatories -> {
+                                                                                           ValorAllValidator(trans, customer, product, deposit, withdrawals, payments, purchases, signatories);
+                                                                                           return Mono.just(trans);
+                                                                                       });
+                                                                           });
+
+                                                                           } ));
+                                                       } ));
+                                        }));
                             });
                 });
+    });
     }
     
     public Mono<Boolean> limitsAndCommissionValidation(Transaction t) {
@@ -300,11 +274,53 @@ public class TransacionServiceImpl implements TransactionService {
 
 	@Override
 	public Flux<Transaction> findAllWithDetail() {
-		
-		return this.findAll().map(transactions -> {
-			transactions.setCustomer(customerClient.getCustomer(transactions.getCustomerId()).block());
-			transactions.setProduct(product.getProduct(transactions.getProductId()).block());
-			return transactions;
-		});
+        return transactionRepository.findAll()
+                .flatMap( trans -> {
+                    return customerClient.getCustomer(trans.getCustomerId())
+                            .flatMapMany( customer -> {
+                                return product.getProduct(trans.getProductId())
+                                        .flatMapMany( product -> {
+                                            return depositClient.getDeposit()
+                                                    .filter(x -> x.getTransactionId().equals(trans.getId()))
+                                                    .collectList()
+                                                    .flatMapMany((deposit -> {
+                                                        return withDrawalClient.getWithDrawal()
+                                                                .filter(i -> i.getTransactionId().equals(trans.getId()))
+                                                                .collectList()
+                                                                .flatMapMany(( withdrawals -> {
+                                                                    return paymentClient.getPayment()
+                                                                            .filter(z -> z.getTransactionId().equals(trans.getId()))
+                                                                            .collectList()
+                                                                            .flatMapMany((payments -> {
+                                                                                return purchaseClient.getPurchase()
+                                                                                        .filter(y -> y.getTransactionId().equals(trans.getId()))
+                                                                                        .collectList()
+                                                                                        .flatMapMany(purchases -> {
+                                                                                            return signatoryClient.getSignatory()
+                                                                                                    .filter(o -> o.getTransactionId().equals(trans.getId()))
+                                                                                                    .collectList()
+                                                                                                    .flatMapMany(signatories -> {
+                                                                                                        ValorAllValidator(trans, customer, product, deposit, withdrawals, payments, purchases, signatories);
+                                                                                                        return Flux.just(trans);
+                                                                                                    });
+                                                                                        });
+
+                                                                            } ));
+                                                                } ));
+                                                    }));
+                                        });
+                            });
+                });
+
 	}
+
+    private void ValorAllValidator(Transaction trans, Customer customer, Product product, List<Deposit> deposit, List<Withdrawal> withdrawals, List<Payment> payments, List<Purchase> purchases, List<Signatory> signatories) {
+        trans.setCustomer(customer);
+        trans.setProduct(product);
+        trans.setDeposit(deposit.stream().collect(Collectors.toList()));
+        trans.setWithdrawal(withdrawals.stream().collect(Collectors.toList()));
+        trans.setPayments(payments.stream().collect(Collectors.toList()));
+        trans.setPurchases(purchases.stream().collect(Collectors.toList()));
+        trans.setSignatories(signatories.stream().collect(Collectors.toList()));
+    }
 }
